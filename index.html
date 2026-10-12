@@ -410,7 +410,15 @@ document.getElementById("showCount").textContent=SHOWS.length+" dates";
     var v=document.createElement("video");
     v.src=SITE.bgVideo; v.muted=true; v.loop=true; v.playsInline=true; v.autoplay=true;
     v.setAttribute("muted","");v.setAttribute("playsinline","");v.preload="auto";
-    host.insertBefore(v,veil); v.play().catch(function(){});
+    host.insertBefore(v,veil);
+    var kick=function(){ var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}); };
+    kick();
+    v.addEventListener("loadeddata",kick);
+    v.addEventListener("canplay",kick);
+    document.addEventListener("visibilitychange",function(){ if(!document.hidden) kick(); });
+    ["pointerdown","touchstart","keydown","scroll","wheel"].forEach(function(ev){
+      window.addEventListener(ev,kick,{once:true,passive:true});
+    });
     return;
   }
   var FR=[A.bgf0,A.bgf1,A.bgf2], nodes=[];
