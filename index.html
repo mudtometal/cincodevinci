@@ -1,3 +1,6 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
 <title>Cincodevinci</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -239,6 +242,33 @@ footer .cap{font-size:8px;letter-spacing:.2em;color:#2E2D2B;}
 .msg{margin-top:22px;font-size:11.5px;line-height:1.9;color:var(--dim);letter-spacing:.03em;max-width:54ch;}
 .msg b{color:var(--fg);font-weight:500;}
 
+
+/* ---------- signup gate ---------- */
+.gate{
+  position:fixed;inset:0;z-index:100;display:none;place-items:center;padding:22px;
+  background:rgba(0,0,0,.74);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  opacity:0;transition:opacity .34s ease;
+}
+.gate.on{display:grid;}
+.gate.vis{opacity:1;}
+.gatecard{
+  width:100%;max-width:372px;background:#050505;border:1px solid var(--hair2);
+  border-radius:16px;padding:32px 24px 22px;position:relative;
+  box-shadow:0 40px 120px rgba(0,0,0,.9);
+  transform:translateY(14px);transition:transform .34s cubic-bezier(.2,.8,.2,1);
+}
+.gate.vis .gatecard{transform:translateY(0);}
+.gatex{position:absolute;top:10px;right:12px;width:30px;height:30px;display:grid;place-items:center;font-size:16px;line-height:1;color:var(--faint);}
+.gatex:hover{color:var(--fg);}
+.gatecard .gm{display:block;text-align:center;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);margin-bottom:15px;}
+.gatecard h3{text-align:center;font-size:13px;letter-spacing:.2em;text-transform:uppercase;font-weight:600;margin-bottom:11px;}
+.gatecard .gl{text-align:center;font-size:11.5px;line-height:1.75;color:var(--dim);letter-spacing:.02em;margin-bottom:19px;}
+.gatecard .joinrow{margin:0;max-width:none;}
+.gateskip{display:block;margin:15px auto 0;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);}
+.gateskip:hover{color:var(--dim);}
+.gateok{text-align:center;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#5BAE7A;padding:13px 0 2px;}
+@media(max-width:380px){.gatecard{padding:28px 18px 20px;}}
+
 @media(prefers-reduced-motion:reduce){*,*::after{transition-duration:.001ms!important;}}
 </style>
 
@@ -315,6 +345,20 @@ footer .cap{font-size:8px;letter-spacing:.2em;color:#2E2D2B;}
 
   <footer><span class="cap f">© 2026 Cincodevinci</span></footer>
 </main>
+
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-label="Join the mailing list">
+  <div class="gatecard">
+    <button class="gatex" id="gateX" type="button" aria-label="Close">&times;</button>
+    <span class="gm" id="gateMark"></span>
+    <h3>First on the drops</h3>
+    <p class="gl" id="gateLede"></p>
+    <div class="joinrow" id="gateRow">
+      <input type="email" id="gateEm" placeholder="Email" aria-label="Email address">
+      <button type="button" id="gateGo">Join &rarr;</button>
+    </div>
+    <button class="gateskip" id="gateSkip" type="button">No thanks</button>
+  </div>
+</div>
 
 <div class="panel" id="panel" role="dialog" aria-modal="true">
   <div class="phead">
@@ -643,6 +687,46 @@ function bag(){
 document.getElementById("bagTop").addEventListener("click",bag);
 
 /* ===================== boot ===================== */
+
+/* ===================== signup gate ===================== */
+(function(){
+  var KEY="cdv.gate", gate=document.getElementById("gate");
+  function been(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
+  function note(v){ try{ localStorage.setItem(KEY,v); }catch(e){} }
+  if(been()) return;                       /* joined or dismissed before -> never again */
+
+  document.getElementById("gateMark").textContent=SITE.name;
+  document.getElementById("gateLede").textContent=SITE.joinLede;
+
+  var timer=setTimeout(open,1800);         /* let the artwork land first */
+  function open(){
+    gate.classList.add("on");
+    requestAnimationFrame(function(){ gate.classList.add("vis"); });
+    document.body.style.overflow="hidden";
+    setTimeout(function(){ try{ document.getElementById("gateEm").focus({preventScroll:true}); }catch(e){} },380);
+  }
+  function shut(why){
+    clearTimeout(timer); note(why);
+    gate.classList.remove("vis");
+    setTimeout(function(){ gate.classList.remove("on"); },340);
+    document.body.style.overflow="";
+  }
+  function join(){
+    var v=document.getElementById("gateEm").value.trim();
+    if(v.indexOf("@")<1||v.indexOf(".")<0) return;
+    document.getElementById("gateRow").outerHTML='<div class="gateok">Check your inbox</div>';
+    document.getElementById("gateSkip").textContent="Close";
+    note("joined");
+    setTimeout(function(){ shut("joined"); },1700);
+  }
+  document.getElementById("gateGo").addEventListener("click",join);
+  document.getElementById("gateEm").addEventListener("keydown",function(e){ if(e.key==="Enter") join(); });
+  document.getElementById("gateX").addEventListener("click",function(){ shut("dismissed"); });
+  document.getElementById("gateSkip").addEventListener("click",function(){ shut("dismissed"); });
+  gate.addEventListener("click",function(e){ if(e.target===gate) shut("dismissed"); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&gate.classList.contains("on")) shut("dismissed"); });
+})();
+
 paintNow(); paintList(); sync();
 })();
 </script>
